@@ -148,6 +148,35 @@ def main():
 	with open('out/d_R_RP_trk.txt', 'w') as f:
 		f.write(d_R_RP_trk.to_string())
 
+	### vertex level info
+	dnm.plotVarsState([['',  d_R_RP_vtx ]],
+			[[ 'xVtx', 'Vertex X', (-0.4, 0.8)],
+			 [ 'yVtx', 'Vertex Y', (-0.6, 0.6)],
+			 [ 'zVtx', 'Vertex Z', (-20, 20)],
+			 [ 'xVtxErr', 'X Error', (0, 0.03)],
+			 [ 'yVtxErr', 'Y Error', (0, 0.03)],
+			 [ 'zVtxErr', 'Z Error', (0, 0.03)]],
+			 'img/vtxStatus_inRaw_notInRawp.pdf')
+	pu.Send2Dropbox('img/vtxStatus_inRaw_notInRawp.pdf')
+
+	### track level info
+	dnm.plotVarsState([['',  d_R_RP_trk ]],
+			[[ 'trkPt', 'trkPt', (0, 5)],
+			 [ 'trkPtError', 'trkPtError', (0, 5)],
+			 [ 'highPurity', 'highPurity', (0, 1)],
+			 [ 'trkPt', 'trkPt (log-scale)', (0, 5), True],
+			 [ 'trkPtError', 'trkPtError (log-scale)', (0, 5), True]],
+			 'img/trkStatus_inRaw_notInRawp.pdf')
+	pu.Send2Dropbox('img/trkStatus_inRaw_notInRawp.pdf')
+
+	dnm.plotVarsState([['',  d_R_RP_trk[ d_R_RP_trk.eval('highPurity==1') ] ]],
+			[[ 'trkPt', 'trkPt', (0, 5)],
+			 [ 'trkPtError', 'trkPtError', (0, 5)],
+			 [ 'highPurity', 'highPurity', (0, 1)],
+			 [ 'trkPt', 'trkPt (log-scale)', (0, 5), True],
+			 [ 'trkPtError', 'trkPtError (log-scale)', (0, 5), True]],
+			 'img/trkStatus_inRaw_notInRawp_HP.pdf')
+	pu.Send2Dropbox('img/trkStatus_inRaw_notInRawp_HP.pdf')
 
 	### set difference on nEv: RAW' - RAW
 	d_RP_R_evt = pd.concat([Ntuple2evt, Ntuple1evt, Ntuple1evt]).drop_duplicates(subset=['nEv'],keep=False)
@@ -172,6 +201,29 @@ def main():
 	print(d_RP_R_trk.to_string())
 	with open('out/d_RP_R_trk.txt', 'w') as f:
 		f.write(d_RP_R_trk.to_string())
+
+	### vertex level info
+	dnm.plotVarsState([['',  d_RP_R_vtx ]],
+			[[ 'xVtx', 'Vertex X', (-0.4, 0.8)],
+			 [ 'yVtx', 'Vertex Y', (-0.6, 0.6)],
+			 [ 'zVtx', 'Vertex Z', (-20, 20)],
+			 [ 'xVtxErr', 'X Error', (0, 0.03)],
+			 [ 'yVtxErr', 'Y Error', (0, 0.03)],
+			 [ 'zVtxErr', 'Z Error', (0, 0.03)]],
+			 'img/vtxStatus_inRawp_notInRaw.pdf')
+	pu.Send2Dropbox('img/vtxStatus_inRawp_notInRaw.pdf')
+
+	### track level info
+	dnm.plotVarsState([['',  d_RP_R_trk ]],
+			[[ 'trkPt', 'trkPt', (0, 5)],
+			 [ 'trkPtError', 'trkPtError', (0, 5)],
+			 [ 'highPurity', 'highPurity', (0, 1)],
+			 [ 'trkPt', 'trkPt (log-scale)', (0, 5), True],
+			 [ 'trkPtError', 'trkPtError (log-scale)', (0, 5), True]],
+			 'img/trkStatus_inRawp_notInRaw.pdf')
+	pu.Send2Dropbox('img/trkStatus_inRawp_notInRaw.pdf')
+
+
 
 if __name__ == '__main__':
 	main()
