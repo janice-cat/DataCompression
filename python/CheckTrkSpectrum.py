@@ -93,7 +93,7 @@ def matchTrksRealReso( 	x1, # to check
 	# print(x2_trklist)
 	return(x1_out)
 
-# print(matchTrksRealReso(df1_badReco.iloc[0], df2_badReco.loc[ df2_badReco.nEv==df1_badReco.iloc[0].nEv ].iloc[0]))
+# print(matchTrksRealReso(df1.iloc[0], df2.loc[ df2.nEv==df1.iloc[0].nEv ].iloc[0]))
 # sys.exit()
 
 
@@ -154,14 +154,14 @@ def main():
 	################################################
 	# 2. Vertex-level matching  : look at the disagreed vertices (badReco)
 	################################################ 
-	df1_wellReco = df1[ df1.xVtx.values == df2.xVtx.values ]
-	df2_wellReco = df2[ df1.xVtx.values == df2.xVtx.values ]
-	df1_badReco  = df1[ ~(df1.xVtx.values == df2.xVtx.values) ]
-	df2_badReco  = df2[ ~(df1.xVtx.values == df2.xVtx.values) ]
-	print(df1_wellReco[['nEv', 'xVtx']])
-	print(df2_wellReco[['nEv', 'xVtx']])
-	print(df1_badReco[['nEv', 'trkPt']])
-	print(df2_badReco[['nEv', 'trkPt']])
+	df1_wellReco = df1[ df1.xVtx.values == df2.xVtx.values ].copy(deep=True)
+	df2_wellReco = df2[ df1.xVtx.values == df2.xVtx.values ].copy(deep=True)
+	df1, df2  = df1[ ~(df1.xVtx.values == df2.xVtx.values) ], \
+		    df2[ ~(df1.xVtx.values == df2.xVtx.values) ]
+	print('RAW  , wellReco:\n', df1_wellReco[['nEv', 'xVtx']])
+	print('RAW\', wellReco:\n', df2_wellReco[['nEv', 'xVtx']])
+	print('RAW  , badReco:\n', df1[['nEv', 'trkPt']])
+	print('RAW\', badReco:\n', df2[['nEv', 'trkPt']])
 
 
 	################################################
@@ -171,47 +171,48 @@ def main():
 	################################################ 
 	# 3.0 Sort pT & cut HP
 	################################################ 
-	df1_badReco.loc[:,trklist] = df1_badReco.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
-	df2_badReco.loc[:,trklist] = df2_badReco.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
-	# print(df1_badReco[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
-	# print(df2_badReco[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
+	df1.loc[:,trklist] = df1.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
+	df2.loc[:,trklist] = df2.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
+	# print(df1[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
+	# print(df2[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
 
 
-	df1_badReco.loc[:,trklist] = df1_badReco.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
-	df2_badReco.loc[:,trklist] = df2_badReco.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
-	# print(df1_badReco[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
-	# print(df2_badReco[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
+	df1.loc[:,trklist] = df1.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
+	df2.loc[:,trklist] = df2.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
+	# print(df1[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
+	# print(df2[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 
 	################################################ 
 	# 3.1 Track matching
 	################################################ 
 	print('Doing track matching (for RAW) ... ')
-	df1_badReco['trkMatched'] = df1_badReco.apply(lambda x: matchTrks(x, df2_badReco.loc[ x.nEv ]), axis=1)
+	df1.loc[:,'trkMatched'] = df1.apply(lambda x: matchTrks(x, df2.loc[ x.nEv ]), axis=1)
 	print('Doing track matching (for RAW\') ... ')
-	df2_badReco['trkMatched'] = df2_badReco.apply(lambda x: matchTrks(x, df1_badReco.loc[ x.nEv ]), axis=1)
-	# print(df1_badReco[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
-	# print(df2_badReco[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
+	df2.loc[:,'trkMatched'] = df2.apply(lambda x: matchTrks(x, df1.loc[ x.nEv ]), axis=1)
+	# print(df1[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
+	# print(df2[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 	
 	################################################ 
 	# 3.2 Flatten & calculate the canonical track parameters
 	################################################ 
-	df1_badReco = unnesting(df1_badReco, trklist+['trkMatched'])
-	df2_badReco = unnesting(df2_badReco, trklist+['trkMatched'])
+	df1 = unnesting(df1, trklist+['trkMatched'])
+	df2 = unnesting(df2, trklist+['trkMatched'])
 
 	def getTrackParam( df ):
 		df['residChi2'] = df['trkChi2']/df['trkNdof']
 		df['relTrkDxy1']= df['trkDxy1']/df['trkDxyError1']
 		df['relTrkDz1'] = df['trkDz1']/df['trkDzError1']
 
-	getTrackParam(df1_badReco)
-	getTrackParam(df2_badReco)
-	print(df1_badReco[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']])
+	getTrackParam(df1)
+	getTrackParam(df2)
+	print(df1[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']])
+	print(df2[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']])
 
 	### bad vtx, well reco trk
-	dnm.plotVarsState([['matched (RAW)',  df1_badReco[ df1_badReco.eval('trkMatched==1') ] ],
-			   # ['matched (RAW\')',  df2_badReco[ df2_badReco.eval('trkMatched==1') ] ],
-			   ['unmatched (RAW)',  df1_badReco[ df1_badReco.eval('trkMatched==0') ] ],
-			   ['unmatched (RAW\')',  df2_badReco[ df2_badReco.eval('trkMatched==0') ] ]],
+	dnm.plotVarsState([['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
+			   # ['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
+			   ['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
+			   ['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ]],
 			[[ 'trkPt', 'trkPt', (0, 5)],
 			 [ 'trkPtError', 'trkPtError', (0, 5)],
 			 [ 'highPurity', 'highPurity', (0, 1)],
@@ -226,10 +227,10 @@ def main():
 			 'img/trkStatus_badVtx_trkRecoDetailed.pdf')
 	pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoDetailed.pdf')
 
-	dnm.plotVarsState([['matched (RAW)',  df1_badReco[ df1_badReco.eval('trkMatched==1') ] ],
-			   # ['matched (RAW\')',  df2_badReco[ df2_badReco.eval('trkMatched==1') ] ],
-			   ['unmatched (RAW)',  df1_badReco[ df1_badReco.eval('trkMatched==0') ] ],
-			   ['unmatched (RAW\')',  df2_badReco[ df2_badReco.eval('trkMatched==0') ] ]],
+	dnm.plotVarsState([['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
+			   # ['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
+			   ['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
+			   ['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ]],
 			[[ 'trkChi2', 'trkChi2', (0, 100)],
 			 [ 'trkNdof', 'trkNdof', (0, 50)],
 			 [ 'trkDxy1', 'trkDxy1', (-5, 5)],
@@ -244,35 +245,35 @@ def main():
 			 'img/trkStatus_badVtx_trkRecoDetailed2.pdf')
 	pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoDetailed2.pdf')
 
-	dnm.plotVarsState([['matched (RAW)',  df1_badReco[ df1_badReco.eval('trkMatched==1') ] ],
-			   # ['matched (RAW\')',  df2_badReco[ df2_badReco.eval('trkMatched==1') ] ],
-			   ['unmatched (RAW)',  df1_badReco[ df1_badReco.eval('trkMatched==0') ] ],
-			   ['unmatched (RAW\')',  df2_badReco[ df2_badReco.eval('trkMatched==0') ] ]],
+	dnm.plotVarsState([['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
+			   # ['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
+			   ['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
+			   ['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ]],
 			[[ 'trkPt', 'trkPt (log-scale)', (0, 1e4), True],
 			 [ 'trkPtError', 'trkPtError (log-scale)', (0, 1e4), True]],
 			 'img/trkStatus_badVtx_trkRecoPt.pdf')
 	pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoPt.pdf')
 
 
-	df1_badReco_wellRecoTrk = df1_badReco[ df1_badReco.eval('trkMatched==1') ][:30000]
-	# print(df1_badReco_wellRecoTrk.to_string())
+	df1_wellRecoTrk = df1[ df1.eval('trkMatched==1') ][:30000]
+	# print(df1_wellRecoTrk.to_string())
 	with open('out/df1_badReco_flatten_wellRecoTrk.txt', 'w') as f:
-		f.write(df1_badReco_wellRecoTrk.to_string())
+		f.write(df1_wellRecoTrk.to_string())
 
-	df1_badReco_badRecoTrk = df1_badReco[ df1_badReco.eval('trkMatched==0') ][:30000]
-	# print(df1_badReco_badRecoTrk.to_string())
+	df1_badRecoTrk = df1[ df1.eval('trkMatched==0') ][:30000]
+	# print(df1_badRecoTrk.to_string())
 	with open('out/df1_badReco_flatten_badRecoTrk.txt', 'w') as f:
-		f.write(df1_badReco_badRecoTrk.to_string())
+		f.write(df1_badRecoTrk.to_string())
 
-	df2_badReco_wellRecoTrk = df2_badReco[ df2_badReco.eval('trkMatched==1') ][:30000]
-	# print(df2_badReco_wellRecoTrk.to_string())
+	df2_wellRecoTrk = df2[ df2.eval('trkMatched==1') ][:30000]
+	# print(df2_wellRecoTrk.to_string())
 	with open('out/df2_badReco_flatten_wellRecoTrk.txt', 'w') as f:
-		f.write(df2_badReco_wellRecoTrk.to_string())
+		f.write(df2_wellRecoTrk.to_string())
 
-	df2_badReco_badRecoTrk = df2_badReco[ df2_badReco.eval('trkMatched==0') ][:30000]
-	# print(df2_badReco_badRecoTrk.to_string())
+	df2_badRecoTrk = df2[ df2.eval('trkMatched==0') ][:30000]
+	# print(df2_badRecoTrk.to_string())
 	with open('out/df2_badReco_flatten_badRecoTrk.txt', 'w') as f:
-		f.write(df2_badReco_badRecoTrk.to_string())
+		f.write(df2_badRecoTrk.to_string())
 
 
 
@@ -280,21 +281,21 @@ def main():
 	##### less info
 	lessinfoArr = [ 'nEv', 'nVtx', 'nTrk', 'xVtx', 'yVtx', 'zVtx',
 			'trkPt', 'trkEta', 'trkNHit', 'trkNlayer', 'highPurity' ]
-	# print(df1_badReco_wellRecoTrk[ lessinfoArr ].to_string())
+	# print(df1_wellRecoTrk[ lessinfoArr ].to_string())
 	with open('out/df1_badReco_flatten_wellRecoTrk_lessinfo.txt', 'w') as f:
-		f.write(df1_badReco_wellRecoTrk[ lessinfoArr ].to_string())
+		f.write(df1_wellRecoTrk[ lessinfoArr ].to_string())
 
-	# print(df1_badReco_badRecoTrk[ lessinfoArr ].to_string())
+	# print(df1_badRecoTrk[ lessinfoArr ].to_string())
 	with open('out/df1_badReco_flatten_badRecoTrk_lessinfo.txt', 'w') as f:
-		f.write(df1_badReco_badRecoTrk[ lessinfoArr ].to_string())
+		f.write(df1_badRecoTrk[ lessinfoArr ].to_string())
 
-	# print(df2_badReco_wellRecoTrk[ lessinfoArr ].to_string())
+	# print(df2_wellRecoTrk[ lessinfoArr ].to_string())
 	with open('out/df2_badReco_flatten_wellRecoTrk_lessinfo.txt', 'w') as f:
-		f.write(df2_badReco_wellRecoTrk[ lessinfoArr ].to_string())
+		f.write(df2_wellRecoTrk[ lessinfoArr ].to_string())
 
-	# print(df2_badReco_badRecoTrk[ lessinfoArr ].to_string())
+	# print(df2_badRecoTrk[ lessinfoArr ].to_string())
 	with open('out/df2_badReco_flatten_badRecoTrk_lessinfo.txt', 'w') as f:
-		f.write(df2_badReco_badRecoTrk[ lessinfoArr ].to_string())
+		f.write(df2_badRecoTrk[ lessinfoArr ].to_string())
 
 
 if __name__ == '__main__':
