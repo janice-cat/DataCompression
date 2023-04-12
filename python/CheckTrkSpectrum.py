@@ -171,14 +171,14 @@ def main():
 	################################################ 
 	# 3.0 Sort pT & cut HP
 	################################################ 
-	df1_badReco[trklist] = df1_badReco.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
-	df2_badReco[trklist] = df2_badReco.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
+	df1_badReco.loc[:,trklist] = df1_badReco.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
+	df2_badReco.loc[:,trklist] = df2_badReco.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
 	# print(df1_badReco[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
 	# print(df2_badReco[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
 
 
-	df1_badReco[trklist] = df1_badReco.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
-	df2_badReco[trklist] = df2_badReco.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
+	df1_badReco.loc[:,trklist] = df1_badReco.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
+	df2_badReco.loc[:,trklist] = df2_badReco.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
 	# print(df1_badReco[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 	# print(df2_badReco[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 
@@ -186,9 +186,9 @@ def main():
 	# 3.1 Track matching
 	################################################ 
 	print('Doing track matching (for RAW) ... ')
-	df1_badReco['trkMatched'] = df1_badReco.apply(lambda x: matchTrks(x, df2_badReco.loc[ df2_badReco.nEv==x.nEv ].iloc[0]), axis=1)
+	df1_badReco['trkMatched'] = df1_badReco.apply(lambda x: matchTrks(x, df2_badReco.loc[ x.nEv ]), axis=1)
 	print('Doing track matching (for RAW\') ... ')
-	df2_badReco['trkMatched'] = df2_badReco.apply(lambda x: matchTrks(x, df1_badReco.loc[ df1_badReco.nEv==x.nEv ].iloc[0]), axis=1)
+	df2_badReco['trkMatched'] = df2_badReco.apply(lambda x: matchTrks(x, df1_badReco.loc[ x.nEv ]), axis=1)
 	# print(df1_badReco[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 	# print(df2_badReco[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 	
