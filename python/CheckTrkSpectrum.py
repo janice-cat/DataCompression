@@ -16,13 +16,10 @@ import PlotUtils as pu
 
 from  itertools import chain
 
-# Sort tracks in terms of pT
-def sortPt(x, 
-	   sortColName,
-	   trklist): 	
-	   # np.array of object dtype of 
-	   # np.array of various dtypes
-	   # single event (row)
+############# op's on single row #############
+def sort( x, 
+	  sortColName,
+	  trklist): 	
 	x_trklist 	= x[trklist]
 	sortedIdx 	= x_trklist[sortColName].argsort()[::-1]
 	for trkCol in trklist:
@@ -31,12 +28,9 @@ def sortPt(x,
 
 
 # Select on high purity tracks
-def cutHP( x, 
-	   cutColName,
-	   trklist): 	
-	   # np.array of object dtype of 
-	   # np.array of various dtypes
-	   # single event (row)
+def cut( x, 
+	  cutColName,
+	  trklist): 	
 	x_trklist 	= x[trklist]
 	cutIdx 		= x_trklist[cutColName]
 	for trkCol in trklist:
@@ -60,42 +54,7 @@ def matchTrks( 	x1, # to check
 	# print(x1_trklist)
 	# print(x2_trklist)
 	return(x1_out)
-
-
-
-def matchTrksRealReso( 	x1, # to check
-		x2, # to ref.
-		threshold=2 ): 	# 2 sigma
-		# single event (row)
-	matchVarArr = ['relTrkPt', 'relTrkDxy1', 'relTrkDz1']
-	x1['relTrkPt'] 	= x1['trkPt']/x1['trkPtError']
-	x2['relTrkPt'] 	= x2['trkPt']/x2['trkPtError']
-	x1['relTrkDxy1']= x1['trkDxy1']/x1['trkDxyError1']
-	x2['relTrkDxy1']= x2['trkDxy1']/x2['trkDxyError1']
-	x1['relTrkDz1'] = x1['trkDz1']/x1['trkDzError1']
-	x2['relTrkDz1'] = x2['trkDz1']/x2['trkDzError1']
-	
-	# print(x1.nEv, x2.nEv)
-	x1_trklist 	= np.array([ ele for ele in x1[matchVarArr]])
-	x2_trklist 	= np.array([ ele for ele in x2[matchVarArr]])
-	x1_out 		= np.zeros(x1_trklist.shape[1])
-	if (x2_trklist.shape[1]==0): return(x1_out)
-	for it in range(x1_trklist.shape[1]):
-		# if (it==10): sys.exit()
-		trkParam = x1_trklist[:,it][:,None] ### column vector
-		# print(trkParam)
-		x1_out[it] = np.sum( np.multiply.reduce( abs(x2_trklist-trkParam) < threshold, axis=0 ) )
-		# print(x2_trklist)
-		# print(abs(x2_trklist-trkParam) < threshold)
-		# print(np.multiply.reduce( abs(x2_trklist-trkParam) < threshold, axis=0 ))
-		# print(x1_out[it])
-	# print(x1_trklist)
-	# print(x2_trklist)
-	return(x1_out)
-
-# print(matchTrksRealReso(df1.iloc[0], df2.loc[ df2.nEv==df1.iloc[0].nEv ].iloc[0]))
-# sys.exit()
-
+############# op's on single row #############
 
 def unnesting(df, explode):
 	idx = df.index.repeat(df[explode[0]].str.len())
@@ -171,14 +130,14 @@ def main():
 	################################################ 
 	# 3.0 Sort pT & cut HP
 	################################################ 
-	df1.loc[:,trklist] = df1.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
-	df2.loc[:,trklist] = df2.apply(lambda x: sortPt(x, 'trkPt', trklist), axis=1)
+	df1.loc[:,trklist] = df1.apply(lambda x: sort(x, 'trkPt', trklist), axis=1)
+	df2.loc[:,trklist] = df2.apply(lambda x: sort(x, 'trkPt', trklist), axis=1)
 	# print(df1[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
 	# print(df2[['nEv', 'trkPt', 'trkPtError', 'highPurity']].head(5).to_string())
 
 
-	df1.loc[:,trklist] = df1.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
-	df2.loc[:,trklist] = df2.apply(lambda x: cutHP(x, 'highPurity', trklist), axis=1)
+	df1.loc[:,trklist] = df1.apply(lambda x: cut(x, 'highPurity', trklist), axis=1)
+	df2.loc[:,trklist] = df2.apply(lambda x: cut(x, 'highPurity', trklist), axis=1)
 	# print(df1[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 	# print(df2[['nEv', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']].head(5).to_string())
 
@@ -208,52 +167,87 @@ def main():
 	print(df1[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']])
 	print(df2[['nEv', 'trkMatched', 'trkEta', 'trkPhi', 'trkPt', 'highPurity']])
 
-	### bad vtx, well reco trk
-	dnm.plotVarsState([['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
-			   # ['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
-			   ['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
-			   ['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ]],
-			[[ 'trkPt', 'trkPt', (0, 5)],
-			 [ 'trkPtError', 'trkPtError', (0, 5)],
-			 [ 'highPurity', 'highPurity', (0, 1)],
-			 
-			 [ 'trkNHit', 'trkNHit', (0, 30)],
-			 [ 'trkEta', 'trkEta', (-5, 5)],
-			 [ 'trkPhi', 'trkPhi', (-np.pi, np.pi)],
 
-			 [ 'trkNlayer', 'trkNlayer', (0, 20)],
-			 [ 'tight', 'tight', (0, 1)],
-			 [ 'loose', 'loose', (0, 1)]],
-			 'img/trkStatus_badVtx_trkRecoDetailed.pdf')
-	pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoDetailed.pdf')
+	def plot(dataspec, 
+		 col_arr=None, 
+		 postfix=''):
 
-	dnm.plotVarsState([['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
-			   # ['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
-			   ['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
-			   ['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ]],
-			[[ 'trkChi2', 'trkChi2', (0, 100)],
-			 [ 'trkNdof', 'trkNdof', (0, 50)],
-			 [ 'trkDxy1', 'trkDxy1', (-5, 5)],
-			 
-			 [ 'trkDxyError1', 'trkDxyError1', (0, 5)],
-			 [ 'trkDz1', 'trkDz1', (-5, 5)],
-			 [ 'trkDzError1', 'trkDzError1', (0, 5)],
-			
-			 [ 'trkFake', 'trkFake', (0, 1)],
-			 [ 'trkAlgo', 'trkAlgo', (0, 25)],
-			 [ 'trkOriginalAlgo', 'trkOriginalAlgo', (0, 25)]], 
-			 'img/trkStatus_badVtx_trkRecoDetailed2.pdf')
-	pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoDetailed2.pdf')
+		### bad vtx, well reco trk
+		dnm.plotVarsState(dataspec,
+				[[ 'trkPt', 'trkPt', (0, 5)],
+				 [ 'trkPtError', 'trkPtError', (0, 5)],
+				 [ 'highPurity', 'highPurity', (0, 1)],
+				 
+				 [ 'trkNHit', 'trkNHit', (0, 30)],
+				 [ 'trkEta', 'trkEta', (-5, 5)],
+				 [ 'trkPhi', 'trkPhi', (-np.pi, np.pi)],
 
-	dnm.plotVarsState([['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
-			   # ['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
-			   ['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
-			   ['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ]],
-			[[ 'trkPt', 'trkPt (log-scale)', (0, 1e4), True],
-			 [ 'trkPtError', 'trkPtError (log-scale)', (0, 1e4), True]],
-			 'img/trkStatus_badVtx_trkRecoPt.pdf')
-	pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoPt.pdf')
+				 [ 'trkNlayer', 'trkNlayer', (0, 20)],
+				 [ 'tight', 'tight', (0, 1)],
+				 [ 'loose', 'loose', (0, 1)]],
+				 'img/trkStatus_badVtx_trkRecoDetailed'+postfix+'.pdf',
+				 col_arr=col_arr)
+		pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoDetailed'+postfix+'.pdf')
 
+		dnm.plotVarsState(dataspec,
+				[[ 'trkChi2', 'trkChi2', (0, 100)],
+				 [ 'trkNdof', 'trkNdof', (0, 50)],
+				 [ 'trkDxy1', 'trkDxy1', (-5, 5)],
+				 
+				 [ 'trkDxyError1', 'trkDxyError1', (0, 5)],
+				 [ 'trkDz1', 'trkDz1', (-5, 5)],
+				 [ 'trkDzError1', 'trkDzError1', (0, 5)],
+				
+				 [ 'trkFake', 'trkFake', (0, 1)],
+				 [ 'trkAlgo', 'trkAlgo', (0, 25)],
+				 [ 'trkOriginalAlgo', 'trkOriginalAlgo', (0, 25)]], 
+				 'img/trkStatus_badVtx_trkRecoDetailed2'+postfix+'.pdf',
+				 col_arr=col_arr)
+		pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoDetailed2'+postfix+'.pdf')
+
+		dnm.plotVarsState(dataspec,
+				[[ 'trkPt', 'trkPt (log-scale)', (0, 1e4), True],
+				 [ 'trkPtError', 'trkPtError (log-scale)', (0, 1e4), True]],
+				 'img/trkStatus_badVtx_trkRecoPt'+postfix+'.pdf',
+				 col_arr=col_arr)
+		pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoPt'+postfix+'.pdf')
+
+		dnm.plotVarsState(dataspec,
+				[[ 'trkPt', 'trkPt', (0, 5)],
+				 [ 'trkEta', 'trkEta', (-5, 5)],
+				 [ 'trkPhi', 'trkPhi', (-np.pi, np.pi)],
+
+				 [ 'trkPtError', 'trkPtError', (0, 0.5)],
+				 [ 'trkNHit', 'trkNHit', (0, 30)],
+				 [ 'trkNlayer', 'trkNlayer', (0, 20)],
+
+				 [ 'trkChi2', 'trkChi2', (0, 100)],
+				 [ 'trkNdof', 'trkNdof', (0, 50)],
+				 [ 'highPurity', 'highPurity', (0, 1)],
+				 
+				 [ 'residChi2', r'$\chi^2/{\rm NDF}$', (0, 5)],
+				 [ 'trkAlgo', 'trkAlgo', (0, 25)],
+				 [ 'trkOriginalAlgo', 'trkOriginalAlgo', (0, 25)],
+
+				 [ 'relTrkDxy1', 'trkDxy1/trkDxyError1', (0, 5)],
+				 [ 'relTrkDz1', 'trkDz1/trkDzError1', (0, 5)]],
+				 'img/trkStatus_badVtx_trkRecoCanonical'+postfix+'.pdf',
+				 col_arr=col_arr)
+		pu.Send2Dropbox('img/trkStatus_badVtx_trkRecoCanonical'+postfix+'.pdf')
+
+
+
+	plot( [ ['matched (RAW)',  df1[ df1.eval('trkMatched==1') ] ],
+		['matched (RAW\')',  df2[ df2.eval('trkMatched==1') ] ],
+		['unmatched (RAW)',  df1[ df1.eval('trkMatched==0') ] ],
+		['unmatched (RAW\')',  df2[ df2.eval('trkMatched==0') ] ] ],
+		col_arr=[(0.17254901960784313, 0.6274509803921569, 0.17254901960784313), 
+			 (0.17254901960784313, 0.6274509803921569, 0.17254901960784313, 0.5), 
+			 (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+			 (1.0, 0.4980392156862745, 0.054901960784313725)], 
+		postfix='_wMatching' )
+	plot( [ ['RAW', df1],
+		['RAW\'', df2] ] )
 
 	df1_wellRecoTrk = df1[ df1.eval('trkMatched==1') ][:30000]
 	# print(df1_wellRecoTrk.to_string())
